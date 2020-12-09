@@ -2,14 +2,14 @@ import mysql.connector
 from mysql.connector import errorcode
 import sys
 import time
-
+import signal
 
 def db_connect():
     config = {
-        'user': 'user',
-        'password': 'password',
-        'host': '192.168.1.2',
-        'database': 'db'
+        'user': 'isac',
+        'password': 'mysqlisac',
+        'host': '192.168.1.10',
+        'database': 'isac'
     }
 
     cnx = None
@@ -36,8 +36,8 @@ def db_close(cnx):
 def insert(cnx, data):
     insert_query = ("INSERT INTO Strain (tag, name, data) VALUES (%(tag)s, %(name)s, %(data)s)")
 
-    tag = 'strain-03'
-    name = 'strain-03'
+    tag = 'strain-01'
+    name = 'strain-01'
     sensor_data = {
         'tag': tag,
         'name': name,
@@ -47,21 +47,26 @@ def insert(cnx, data):
     cur = cnx.cursor()
     try:
         cur.execute(insert_query, sensor_data)
-        print("successfully inserted to database: ", data)
     except:
         print("not inserted")
     cnx.commit()
 
+def signal_handler(signal, frame):
+    print('stopped with ctrl-c')
+    sys.exit(0)
 
 def main():
-    cnx = db_connect()
+    signal.signal(signal.SIGINT, signal_handler)
 
+    cnx = db_connect()
     with open('strain-sensor-data.csv', 'r') as f:
-        data = f.readline().strip()
-        while data != '':
-            insert(cnx, data)
+        data = [line.strip() for line in f.readlines()]
+
+    while True:
+        for d in data:
+            print(d)
+            # insert(cnx, d)
             time.sleep(1)
-            data = f.readline().strip()
 
     db_close(cnx)
 
