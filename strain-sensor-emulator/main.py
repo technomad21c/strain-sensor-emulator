@@ -1,14 +1,15 @@
 import mysql.connector
 from mysql.connector import errorcode
 import sys
+import time
 
 
 def db_connect():
     config = {
-        'user': 'isac',
-        'password': 'mysqlisac',
-        'host': '192.168.1.10',
-        'database': 'isac'
+        'user': 'user',
+        'password': 'password',
+        'host': '192.168.1.2',
+        'database': 'db'
     }
 
     cnx = None
@@ -32,12 +33,11 @@ def db_close(cnx):
     cnx.close()
 
 
-def insert(cnx):
+def insert(cnx, data):
     insert_query = ("INSERT INTO Strain (tag, name, data) VALUES (%(tag)s, %(name)s, %(data)s)")
 
-    tag = 'strain-02'
-    name = 'strain-02'
-    data = '15.4'
+    tag = 'strain-03'
+    name = 'strain-03'
     sensor_data = {
         'tag': tag,
         'name': name,
@@ -47,7 +47,7 @@ def insert(cnx):
     cur = cnx.cursor()
     try:
         cur.execute(insert_query, sensor_data)
-        print("inserted successfully")
+        print("successfully inserted to database: ", data)
     except:
         print("not inserted")
     cnx.commit()
@@ -55,9 +55,15 @@ def insert(cnx):
 
 def main():
     cnx = db_connect()
-    insert(cnx)
-    db_close(cnx)
 
+    with open('strain-sensor-data.csv', 'r') as f:
+        data = f.readline().strip()
+        while data != '':
+            insert(cnx, data)
+            time.sleep(1)
+            data = f.readline().strip()
+
+    db_close(cnx)
 
 if __name__ == '__main__':
     main()
